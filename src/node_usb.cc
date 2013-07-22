@@ -87,9 +87,9 @@ NODE_MODULE(usb_bindings, Initialize)
 Handle<Value> SetDebugLevel(const Arguments& args) {
 	HandleScope scope;
 	if (args.Length() != 1 || !args[0]->IsUint32() || args[0]->Uint32Value() >= 4) {
-		THROW_BAD_ARGS("Usb::SetDebugLevel argument is invalid. [uint:[0-3]]!") 
+		THROW_BAD_ARGS("Usb::SetDebugLevel argument is invalid. [uint:[0-3]]!")
 	}
-	
+
 	libusb_set_debug(usb_context, args[0]->Uint32Value());
 	return Undefined();
 }
@@ -134,8 +134,8 @@ void initConstants(Handle<Object> target){
 	NODE_DEFINE_CONSTANT(target, LIBUSB_REQUEST_GET_INTERFACE);
 	NODE_DEFINE_CONSTANT(target, LIBUSB_REQUEST_SET_INTERFACE);
 	NODE_DEFINE_CONSTANT(target, LIBUSB_REQUEST_SYNCH_FRAME);
-	NODE_DEFINE_CONSTANT(target, LIBUSB_REQUEST_SET_SEL);
-	NODE_DEFINE_CONSTANT(target, LIBUSB_SET_ISOCH_DELAY);
+	// NODE_DEFINE_CONSTANT(target, LIBUSB_REQUEST_SET_SEL);
+	// NODE_DEFINE_CONSTANT(target, LIBUSB_SET_ISOCH_DELAY);
 	// libusb_descriptor_type
 	NODE_DEFINE_CONSTANT(target, LIBUSB_DT_DEVICE);
 	NODE_DEFINE_CONSTANT(target, LIBUSB_DT_CONFIG);
@@ -190,7 +190,7 @@ void initConstants(Handle<Object> target){
 }
 
 Local<Value> libusbException(int errorno) {
-	const char* err = libusb_error_name(errorno);	
+	const char* err = libusb_error_name(errorno);
 	Local<Value> e  = Exception::Error(String::NewSymbol(err));
 	e->ToObject()->Set(V8SYM("errno"), Integer::New(errorno));
 	return e;

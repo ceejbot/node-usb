@@ -21,7 +21,7 @@ Device::~Device(){
 // Map pinning each libusb_device to a particular V8 instance
 std::map<libusb_device*, Persistent<Value> > Device::byPtr;
 
-// Get a V8 instance for a libusb_device: either the existing one from the map, 
+// Get a V8 instance for a libusb_device: either the existing one from the map,
 // or create a new one and add it to the map.
 Handle<Value> Device::get(libusb_device* dev){
 	auto it = byPtr.find(dev);
@@ -31,7 +31,7 @@ Handle<Value> Device::get(libusb_device* dev){
 		auto v = Persistent<Value>::New(pDevice.create(new Device(dev)));
 		v.MakeWeak(dev, weakCallback);
 		byPtr.insert(std::make_pair(dev, v));
-		return v;	
+		return v;
 	}
 }
 
@@ -98,14 +98,14 @@ Handle<Value> Device_GetConfigDescriptor(const Arguments& args){
 
 	for (int idxInterface = 0; idxInterface < cdesc->bNumInterfaces; idxInterface++) {
 		int numAltSettings = cdesc->interface[idxInterface].num_altsetting;
-		
+
 		Local<Array> v8altsettings = Array::New(numAltSettings);
 		v8interfaces->Set(idxInterface, v8altsettings);
 
 		for (int idxAltSetting = 0; idxAltSetting < numAltSettings; idxAltSetting++) {
 			const libusb_interface_descriptor& idesc =
 				cdesc->interface[idxInterface].altsetting[idxAltSetting];
-			
+
 			Local<Object> v8idesc = Object::New();
 			v8altsettings->Set(idxAltSetting, v8idesc);
 
@@ -147,6 +147,10 @@ Handle<Value> Device_Open(const Arguments& args){
 	ENTER_METHOD(pDevice, 0);
 	if (!self->handle){
 		CHECK_USB(libusb_open(self->device, &self->handle));
+		int cfg;
+		CHECK_USB(libusb_get_configuration(self->handle, &cfg));
+		if (cfg != 1)
+			CHECK_USB(libusb_set_configuration(self->handle, 1));
 	}
 	return scope.Close(Undefined());
 }
@@ -224,8 +228,8 @@ Handle<Value> IsKernelDriverActive(const Arguments& args) {
 	int r = libusb_kernel_driver_active(self->handle, interface);
 	CHECK_USB(r);
 	return scope.Close(Boolean::New(r));
-}	
-	
+}
+
 Handle<Value> DetachKernelDriver(const Arguments& args) {
 	ENTER_METHOD(pDevice, 1);
 	CHECK_OPEN();
@@ -306,11 +310,11 @@ static void init(Handle<Object> target){
 	pDevice.addMethod("__open", Device_Open);
 	pDevice.addMethod("__close", Device_Close);
 	pDevice.addMethod("reset", Device_Reset::begin);
-	
+
 	pDevice.addMethod("__claimInterface", Device_ClaimInterface);
 	pDevice.addMethod("__releaseInterface", Device_ReleaseInterface::begin);
 	pDevice.addMethod("__setInterface", Device_SetInterface::begin);
-	
+
 	pDevice.addMethod("__isKernelDriverActive", IsKernelDriverActive);
 	pDevice.addMethod("__detachKernelDriver", DetachKernelDriver);
 	pDevice.addMethod("__attachKernelDriver", AttachKernelDriver);
